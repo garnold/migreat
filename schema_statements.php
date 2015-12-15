@@ -115,7 +115,7 @@ function migrate($migrations) {
     $step = array_reduce(
         $argv,
         function ($result, $item) {
-            list($name, $value) = explode('=', $item);
+            @list($name, $value) = explode('=', $item);
             return $name == 'STEP' ? $value : $result;
         },
         $is_redo || $is_undo ? 1 : -1);
@@ -155,7 +155,7 @@ function do_migrate($migrations, $step, $is_down) {
 }
 
 function migrated($version) {
-    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', array($version)) === 1;
+    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', array($version)) == 1;
 }
 
 function down($version, $down) {
