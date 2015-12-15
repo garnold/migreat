@@ -1,9 +1,9 @@
 <?php
 
-function connect($driver, $host, $database_name) {
+function connect($driver, $host, $database_name, $username='root', $password='') {
     require_once(implode(DIRECTORY_SEPARATOR, array(dirname(__FILE__), "schema_statements.$driver.php")));
 
-    __do_connect("$driver:host=$host");
+    __do_connect("$driver:host=$host", $username, $password);
     __ob(function () use ($database_name) {
         say('== Create database');
         if (!database_exists($database_name)) {
@@ -15,7 +15,7 @@ function connect($driver, $host, $database_name) {
         }
     });
 
-    __do_connect("$driver:host=$host;dbname=$database_name");
+    __do_connect("$driver:host=$host;dbname=$database_name", $username, $password);
     __ob(function () {
         say('== Create schema_migrations table');
         if (!table_exists('schema_migrations')) {
@@ -30,10 +30,10 @@ function connect($driver, $host, $database_name) {
     return true;
 }
 
-function __do_connect($dsn) {
+function __do_connect($dsn, $username, $password) {
     global $connection;
 
-    $connection = new PDO($dsn);
+    $connection = new PDO($dsn, $username, $password);
     $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     return true;
@@ -115,7 +115,7 @@ function migrate($migrations) {
     $step = array_reduce(
         $argv,
         function ($result, $item) {
-            list($name, $value) = explode('=', $item);
+            @list($name, $value) = explode('=', $item);
             return $name == 'STEP' ? $value : $result;
         },
         $is_redo || $is_undo ? 1 : -1);
@@ -155,7 +155,7 @@ function do_migrate($migrations, $step, $is_down) {
 }
 
 function migrated($version) {
-    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', array($version)) === 1;
+    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', array($version)) == 1;
 }
 
 function down($version, $down) {
