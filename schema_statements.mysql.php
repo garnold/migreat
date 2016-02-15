@@ -13,5 +13,5 @@ function table_exists($table_name) {
 }
 
 function create_schema_migrations_table() {
-    return execute('CREATE TABLE schema_migrations(version VARCHAR(255) UNIQUE)');
+    return execute('CREATE TABLE schema_migrations(version VARCHAR(255) NOT NULL UNIQUE)');
 }
