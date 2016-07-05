@@ -1,9 +1,9 @@
 <?php
 
-function connect($driver, $host, $database_name, $username='root', $password='') {
+function connect($driver, $host, $database_name, $username='root', $password='', $options = []) {
     require_once(implode(DIRECTORY_SEPARATOR, array(dirname(__FILE__), "schema_statements.$driver.php")));
 
-    __do_connect("$driver:host=$host", $username, $password);
+    __do_connect("$driver:host=$host", $username, $password, $options);
     __ob(function () use ($database_name) {
         say('== Create database');
         if (!database_exists($database_name)) {
@@ -15,7 +15,7 @@ function connect($driver, $host, $database_name, $username='root', $password='')
         }
     });
 
-    __do_connect("$driver:host=$host;dbname=$database_name", $username, $password);
+    __do_connect("$driver:host=$host;dbname=$database_name", $username, $password, $options);
     __ob(function () {
         say('== Create schema_migrations table');
         if (!table_exists('schema_migrations')) {
@@ -30,10 +30,10 @@ function connect($driver, $host, $database_name, $username='root', $password='')
     return true;
 }
 
-function __do_connect($dsn, $username, $password) {
+function __do_connect($dsn, $username, $password, $options) {
     global $connection;
 
-    $connection = new PDO($dsn, $username, $password);
+    $connection = new PDO($dsn, $username, $password, $options);
     $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     return true;
