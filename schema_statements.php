@@ -1,9 +1,9 @@
 <?php
 
-function connect($driver, $host, $database_name, $username='root', $password='', $options = []) {
+function connect($driver, $database_name, $host = '127.0.0.1', $port = 3306, $username = 'root', $password = '', $options = []) {
     require_once(implode(DIRECTORY_SEPARATOR, array(dirname(__FILE__), "schema_statements.$driver.php")));
 
-    __do_connect("$driver:host=$host", $username, $password, $options);
+    __do_connect("$driver:host=$host;port=$port", $username, $password, $options);
     __ob(function () use ($database_name) {
         say('== Create database');
         if (!database_exists($database_name)) {
@@ -15,7 +15,7 @@ function connect($driver, $host, $database_name, $username='root', $password='',
         }
     });
 
-    __do_connect("$driver:host=$host;dbname=$database_name", $username, $password, $options);
+    __do_connect("$driver:host=$host;port=$port;dbname=$database_name", $username, $password, $options);
     __ob(function () {
         say('== Create schema_migrations table');
         if (!table_exists('schema_migrations')) {
