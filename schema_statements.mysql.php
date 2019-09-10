@@ -1,7 +1,7 @@
 <?php
 
 function database_exists($database_name) {
-    return select_value('SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?', array($database_name)) == 1;
+    return select_value('SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?', [$database_name]) == 1;
 }
 
 function create_database($database_name) {
@@ -9,7 +9,7 @@ function create_database($database_name) {
 }
 
 function table_exists($table_name) {
-    return select_value('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=SCHEMA() AND TABLE_NAME=?', array($table_name)) == 1;
+    return select_value('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=SCHEMA() AND TABLE_NAME=?', [$table_name]) == 1;
 }
 
 function create_schema_migrations_table() {

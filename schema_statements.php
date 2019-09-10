@@ -1,9 +1,11 @@
 <?php
 
-function connect($driver, $database_name, $host = '127.0.0.1', $port = 3306, $username = 'root', $password = '', $options = []) {
-    require_once(implode(DIRECTORY_SEPARATOR, array(dirname(__FILE__), "schema_statements.$driver.php")));
+function connect($dsn, $database_name, $username = 'root', $password = '', $options = []) {
+    $driver = parse_url($dsn, PHP_URL_SCHEME);
 
-    __do_connect("$driver:host=$host;port=$port", $username, $password, $options);
+    require_once(implode(DIRECTORY_SEPARATOR, [dirname(__FILE__), "schema_statements.$driver.php"]));
+
+    __do_connect($dsn, $username, $password, $options);
     __ob(function () use ($database_name) {
         say('== Create database');
         if (!database_exists($database_name)) {
@@ -15,7 +17,7 @@ function connect($driver, $database_name, $host = '127.0.0.1', $port = 3306, $us
         }
     });
 
-    __do_connect("$driver:host=$host;port=$port;dbname=$database_name", $username, $password, $options);
+    __do_connect("$dsn;dbname=$database_name", $username, $password, $options);
     __ob(function () {
         say('== Create schema_migrations table');
         if (!table_exists('schema_migrations')) {
@@ -61,23 +63,23 @@ function say($what) {
     printf('%s%s', $what, PHP_EOL);
 }
 
-function select_value($sql, $parameters = array()) {
+function select_value($sql, $parameters = []) {
     return execute($sql, $parameters, PDO::FETCH_COLUMN, 0)->fetch();
 }
 
-function select_values($sql, $parameters = array()) {
+function select_values($sql, $parameters = []) {
     return execute($sql, $parameters, PDO::FETCH_COLUMN, 0)->fetchAll();
 }
 
-function select_row($sql, $parameters = array()) {
+function select_row($sql, $parameters = []) {
     return execute($sql, $parameters, PDO::FETCH_BOTH)->fetch();
 }
 
-function select_rows($sql, $parameters = array()) {
+function select_rows($sql, $parameters = []) {
     return execute($sql, $parameters, PDO::FETCH_BOTH)->fetchAll();
 }
 
-function execute($sql, $parameters = array(), $fetch_mode = null, $column = 0) {
+function execute($sql, $parameters = [], $fetch_mode = null, $column = 0) {
     global $connection;
 
     say("-- $sql");
@@ -155,20 +157,20 @@ function do_migrate($migrations, $step, $is_down) {
 }
 
 function migrated($version) {
-    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', array($version)) == 1;
+    return select_value('SELECT 1 FROM schema_migrations WHERE version=?', [$version]) == 1;
 }
 
 function down($version, $down) {
     return transact(function () use ($version, $down) {
         $down();
-        execute('DELETE FROM schema_migrations WHERE version=?', array($version));
+        execute('DELETE FROM schema_migrations WHERE version=?', [$version]);
     });
 }
 
 function up($version, $up) {
     return transact(function () use ($version, $up) {
         $up();
-        execute('INSERT INTO schema_migrations VALUES (?)', array($version));
+        execute('INSERT INTO schema_migrations VALUES (?)', [$version]);
     });
 }
 
